@@ -2,6 +2,7 @@ import os
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from auth.auth import requires_auth
 
 from models import setup_db, Movie, Actor
 #from .auth.auth import AuthError, requires_auth
@@ -24,7 +25,8 @@ def create_app(test_config=None):
 
     
   @app.route('/actors')
-  def actor_detail():
+  @requires_auth('get:actors')
+  def actor_detail(payload):
     selection = Actor.query.order_by(Actor.id).all()
     
     total_actors = [actor.format() for actor in selection]
@@ -34,7 +36,8 @@ def create_app(test_config=None):
     })
 
   @app.route('/movies')
-  def movie_detail():
+  @requires_auth('get:movies')
+  def movie_detail(payload):
     selection = Movie.query.order_by(Movie.id).all()
     current_movies = paginate_movies(request,selection)
     if len(current_movies) == 0:
@@ -47,7 +50,8 @@ def create_app(test_config=None):
   
 
   @app.route('/actors', methods=['post'])
-  def create_actor():
+  @requires_auth('post:actors')
+  def create_actor(payload):
     body = request.get_json()
     new_name =body.get('name', None)
     new_age = body.get('age', None)
@@ -70,7 +74,8 @@ def create_app(test_config=None):
       abort(422)
 
   @app.route('/movies', methods=['POST'])
-  def movie_post():
+  @requires_auth('post:movies')
+  def movie_post(payload):
     body = request.get_json()
     new_title =body.get('title', None)
     new_date = body.get('date', None)
@@ -92,7 +97,8 @@ def create_app(test_config=None):
       abort(422)
 
   @app.route('/actors/<int:actor_id>', methods=['delete'])
-  def actor_delete(actor_id):
+  @requires_auth('delete:actors')
+  def actor_delete(payload,actor_id):
     try:
       actor =Actor.query.filter(Actor.id==actor_id).one_or_none()
       deleted_actor=actor
@@ -110,7 +116,8 @@ def create_app(test_config=None):
       abort(422)
 
   @app.route('/movies/<int:movie_id>', methods=['delete'])
-  def movie_delete(movie_id):
+  @requires_auth('delete:movies')
+  def movie_delete(payload,movie_id):
     try:
       movie = Movie.query.filter(Movie.id==movie_id).one_or_none()
       deleted_movie=movie
@@ -128,7 +135,8 @@ def create_app(test_config=None):
 
 
   @app.route('/actors/<int:actor_id>', methods=['patch'])
-  def actor_edit(actor_id):
+  @requires_auth('modify:actors')
+  def actor_edit(payload,actor_id):
     body = request.get_json()
 
     try:
@@ -154,7 +162,8 @@ def create_app(test_config=None):
       abort(400)
 
   @app.route('/movies/<int:movie_id>', methods=['patch'])
-  def movie_edit(movie_id):
+  @requires_auth('modify:movies')
+  def movie_edit(payload,movie_id):
     body = request.get_json()
 
     try:
