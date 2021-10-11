@@ -1,4 +1,3 @@
-
 import os
 import unittest
 import json
@@ -19,12 +18,11 @@ class CastingTestCase(unittest.TestCase):
         """Define test variables and initialize app."""
         self.app = create_app()
         self.client = self.app.test_client
-        self.database_name = "casting_test"
         self.database_path = os.environ.get('DATABASE_URL')
         if self.database_path and self.database_path.startswith("postgres://"):
             self.database_path = self.database_path.replace("postgres://", "postgresql://", 1)
         else:
-            self.database_path = "postgresql://{}:{}@{}/{}".format('cap','1122','localhost:5432', self.database_name)
+            self.database_path =os.environ.get('Test_database_name')
         setup_db(self.app, self.database_path)
 
         self.new_actor = {
@@ -56,8 +54,8 @@ class CastingTestCase(unittest.TestCase):
     def test_retrieve_actors_success(self):
         """test retreaving all actors"""
         res = self.client().get('/actors', headers={"Authorization": os.environ.get('EXECUTIVE')})
-        data = json.loads(res.data)
         self.assertEqual(res.status_code,200)
+        data = json.loads(res.data)
         self.assertEqual(data['success'], True)
         self.assertTrue(data['actors'])
 
@@ -70,10 +68,10 @@ class CastingTestCase(unittest.TestCase):
     def test_edit_actor_success(self):
         """test if name and age was changed"""
         res = self.client().patch('/actors/3', json={"name":"nasser", "age":"22"}, headers={"Authorization": os.environ.get('EXECUTIVE')})
+        self.assertEqual(res.status_code,200)
         actor = Actor.query.filter(Actor.id == 3).one_or_none()
         data = json.loads(res.data)
 
-        self.assertEqual(res.status_code,200)
         self.assertEqual(data['success'], True)
         self.assertEqual(actor.format()['age'], '22')
         self.assertEqual(actor.format()['name'], 'nasser')
@@ -91,9 +89,9 @@ class CastingTestCase(unittest.TestCase):
     def test_create_actor_success(self):
         """test if actor can be created"""
         res = self.client().post('/actors', json=self.new_actor, headers={"Authorization": os.environ.get('EXECUTIVE')})
+        self.assertEqual(res.status_code,200)
         data = json.loads(res.data)
         self.assertEqual(data['success'], True)
-        self.assertEqual(res.status_code,200)
         self.assertTrue(data['actors'])
         self.assertTrue(data['created'])
         
@@ -120,9 +118,9 @@ class CastingTestCase(unittest.TestCase):
     def test_retrieve_movies_success(self):
         """test retreaving all movies"""
         res = self.client().get('/movies', headers={"Authorization": os.environ.get('EXECUTIVE')})
+        self.assertEqual(res.status_code,200)
         data = json.loads(res.data)
         self.assertEqual(data['success'], True)
-        self.assertEqual(res.status_code,200)
         self.assertTrue(data['movies'])
       
     def test_retrieve_movies_fail(self):
@@ -198,8 +196,8 @@ class CastingTestCase(unittest.TestCase):
     def test_assistant_retrieve_actors_success(self):
         """test assistant retreaving all actors"""
         res = self.client().get('/actors', headers={"Authorization": os.environ.get('ASSISTANT')})
-        data = json.loads(res.data)
         self.assertEqual(res.status_code,200)
+        data = json.loads(res.data)
         self.assertEqual(data['success'], True)
         self.assertTrue(data['actors'])
 
@@ -212,9 +210,9 @@ class CastingTestCase(unittest.TestCase):
     def test_director_create_actor_success(self):
         """test if director can create actor"""
         res = self.client().post('/actors', json=self.new_actor, headers={"Authorization": os.environ.get('DIRECTOR')})
+        self.assertEqual(res.status_code,200)
         data = json.loads(res.data)
         self.assertEqual(data['success'], True)
-        self.assertEqual(res.status_code,200)
         self.assertTrue(data['actors'])
         self.assertTrue(data['created'])   
 
