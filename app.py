@@ -1,9 +1,6 @@
-import json
-import os
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-import requests
 from auth.auth import requires_auth
 
 from models import setup_db, Movie, Actor
