@@ -1,7 +1,9 @@
+import json
 import os
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+import requests
 from auth.auth import requires_auth
 
 from models import setup_db, Movie, Actor
@@ -23,6 +25,11 @@ def create_app(test_config=None):
   setup_db(app)
   CORS(app)
 
+  @app.after_request
+  def after_request(response):
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,true')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
     
   @app.route('/actors')
   @requires_auth('get:actors')
@@ -154,7 +161,7 @@ def create_app(test_config=None):
 
       return jsonify({
         'success': True,
-        'id': actor.format()
+        'actors': actor.format()
       
       })
     
@@ -174,18 +181,20 @@ def create_app(test_config=None):
         movie.title=body.get('title')
       if 'date' in body:
         movie.date=body.get('date')
-
       movie.update()
-      return jsonify({
-        'success': True,
-        'movies': movie.format()
-      })
-
     except:
       abort(400)
+    
+    return jsonify({
+      'success': True,
+      'movies': movie.format()
+    })
+
+   
 
 
   return app
+
 
 
 app = create_app()
@@ -209,24 +218,23 @@ def bad_request(error):
       "success": False,
       "error": 400,
       "message": "bad request"
-    }), 400
+    })
   
 @app.errorhandler(405)
 def not_allowed(error):
     return jsonify({
       "success": False,
-      "error": 405,
       "message": "method not allowed"
-    }), 405
+    })
 
 
 
 @app.errorhandler(404)
 def resource_not_found(error):
     return jsonify({
-        'success': False,
-        'error': 404,
-        'message': 'resource not found'})
+        "success": False,
+        "error": 404,
+        "message": "resource not found"})
 
 
 """ @app.errorhandler("AuthError")
